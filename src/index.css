@@ -1,46 +1,54 @@
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  background-color: #f4f4f7;
+/* Import a highly legible, premium Web3 font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* Tailwind Directives - These inject all the utility classes we used in App.tsx */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    /* This makes text rendering much crisper on high-res displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Base fallback styling */
+  body {
+    @apply bg-slate-50 text-slate-800 m-0 p-0 overflow-x-hidden;
+  }
 }
 
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 40px;
-  min-height: 100vh;
+/* 🎨 Custom Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  width: 100%;
-  max-width: 500px;
-  margin-top: 30px;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  shadow: 0 4px 6px rgba(0,0,0,0.1);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-input, textarea {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300/50 rounded-full transition-colors;
 }
 
-button {
-  padding: 12px;
-  background-color: #0052ff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400/80;
 }
 
-button:disabled {
-  background-color: #aaa;
+/* Globally handle focus states so you don't get ugly default browser outlines */
+*:focus-visible {
+  @apply outline-none ring-2 ring-blue-500/50 transition-shadow;
+}
+
+/* Fix for auto-fill styling in WebKit browsers (keeps inputs looking glassy) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1e293b !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
