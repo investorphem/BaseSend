@@ -3,7 +3,7 @@ import { useWriteContract, useAccount, useConfig } from 'wagmi';
 import { waitForTransactionReceipt } from '@wagmi/core';
 import { parseEther, parseUnits, parseAbi, isAddress } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Send, History, Coins, Loader2, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Send, History, Coins, Loader2, CheckCircle2, ShieldCheck, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 const CONTRACT_ADDRESS = '0x883f9868C5D44B16949ffF77fe56c4d9A9C2cfbD';
@@ -20,10 +20,9 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
 
-  // Form States
-  const [recipients, setRecipients] = useState('');
-  const [amounts, setAmounts] = useState('');
+  // 🚀 Upgraded Form State: Dynamic Rows instead of messy strings
   const [tokenAddr, setTokenAddr] = useState('');
+  const [rows, setRows] = useState([{ address: '', amount: '' }]);
 
   const { writeContractAsync } = useWriteContract();
 
@@ -33,20 +32,27 @@ export default function App() {
     if (saved) setHistory(JSON.parse(saved));
   }, [address]);
 
+  // Row Management Functions
+  const addRow = () => setRows([...rows, { address: '', amount: '' }]);
+  const removeRow = (index: number) => setRows(rows.filter((_, i) => i !== index));
+  const updateRow = (index: number, field: 'address' | 'amount', value: string) => {
+    const newRows = [...rows];
+    newRows[index][field] = value;
+    setRows(newRows);
+  };
+
   const handleSend = async (type: 'ETH' | 'TOKEN') => {
     if (!isConnected) return toast.error("Please connect your wallet first.");
-    if (chain?.id !== 8453) return toast.error("Please switch to the Base Network.");
-    if (!recipients || !amounts) return toast.error("Recipients and amounts cannot be empty.");
+    if (chain?.id !== 8453 && chain?.id !== 84532) return toast.error("Please switch to the Base Network.");
 
-    const addrs = recipients.replace(/[\[\]"]/g, '').split(',').map(a => a.trim()).filter(a => a);
-    const amts = amounts.replace(/[\[\]"]/g, '').split(',').map(a => a.trim()).filter(a => a);
+    // Filter out completely empty rows
+    const validRows = rows.filter(r => r.address.trim() !== '' && r.amount.trim() !== '');
+    if (validRows.length === 0) return toast.error("Please add at least one recipient and amount.");
 
-    // 1. Validation: Array lengths
-    if (addrs.length !== amts.length) {
-      return toast.error("Mismatch: Number of recipients must match number of amounts.");
-    }
+    const addrs = validRows.map(r => r.address.trim());
+    const amts = validRows.map(r => r.amount.trim());
 
-    // 2. Validation: Valid addresses
+    // Validation: Check for valid Ethereum addresses
     const invalidAddresses = addrs.filter(addr => !isAddress(addr));
     if (invalidAddresses.length > 0) {
       return toast.error(`Invalid address detected: ${invalidAddresses[0]}`);
@@ -96,8 +102,8 @@ export default function App() {
       toast.success("Batch transfer completed successfully!", { id: toastId });
       
       // Clear forms on success
-      setRecipients('');
-      setAmounts('');
+      setRows([{ address: '', amount: '' }]);
+      setTokenAddr('');
 
     } catch (e: any) {
       console.error(e);
@@ -108,11 +114,10 @@ export default function App() {
   };
 
   return (
-    {/* Notice the new modern gradient background */}
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-slate-50 to-purple-50 flex font-sans text-slate-800">
       <Toaster position="top-center" richColors />
       
-      {/* Sidebar - Upgraded to Glassmorphism */}
+      {/* Sidebar */}
       <aside className="w-64 bg-white/60 backdrop-blur-xl border-r border-white/50 p-6 hidden md:flex flex-col shadow-[1px_0_20px_rgb(0,0,0,0.02)] z-10">
         <div className="flex items-center gap-3 mb-10">
           <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
@@ -153,7 +158,7 @@ export default function App() {
 
         {activeTab === 'send' ? (
           <div className="max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Form Section - Glass Card with upgraded inputs */}
+            {/* Form Section */}
             <section className="lg:col-span-2 space-y-6">
               <div className="bg-white/70 backdrop-blur-xl p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50">
                 <div className="space-y-6">
@@ -165,28 +170,54 @@ export default function App() {
                       value={tokenAddr} onChange={e => setTokenAddr(e.target.value)} 
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 block ml-1">Recipients</label>
-                      <textarea 
-                        className="w-full px-5 py-4 rounded-2xl bg-slate-100/50 border border-slate-200/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-300 h-52 text-sm font-mono placeholder:text-slate-300 resize-none leading-relaxed"
-                        placeholder="0x123...&#10;0x456..." 
-                        value={recipients} onChange={e => setRecipients(e.target.value)} 
-                      />
+                  
+                  {/* Dynamic Rows Section */}
+                  <div>
+                    <div className="flex justify-between items-end mb-2.5 ml-1">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Recipients & Amounts</label>
+                      <span className="text-xs font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">{rows.length} Total</span>
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 block ml-1">Amounts</label>
-                      <textarea 
-                        className="w-full px-5 py-4 rounded-2xl bg-slate-100/50 border border-slate-200/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-300 h-52 text-sm font-mono placeholder:text-slate-300 resize-none leading-relaxed"
-                        placeholder="0.1&#10;0.05" 
-                        value={amounts} onChange={e => setAmounts(e.target.value)} 
-                      />
+                    
+                    <div className="space-y-3">
+                      {rows.map((row, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <input 
+                            className="flex-1 px-5 py-4 rounded-2xl bg-slate-100/50 border border-slate-200/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-300 placeholder:text-slate-300 font-mono text-sm"
+                            placeholder="0x... Address" 
+                            value={row.address} 
+                            onChange={e => updateRow(index, 'address', e.target.value)} 
+                          />
+                          <input 
+                            className="w-32 px-5 py-4 rounded-2xl bg-slate-100/50 border border-slate-200/50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all duration-300 placeholder:text-slate-300 font-mono text-sm"
+                            placeholder="0.0" 
+                            type="number"
+                            step="any"
+                            value={row.amount} 
+                            onChange={e => updateRow(index, 'amount', e.target.value)} 
+                          />
+                          <button 
+                            onClick={() => removeRow(index)}
+                            disabled={rows.length === 1}
+                            className="p-4 rounded-2xl text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                            title="Remove row"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+
+                    <button 
+                      onClick={addRow}
+                      className="mt-4 flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-5 py-3 rounded-xl transition-colors w-fit"
+                    >
+                      <Plus size={16} /> Add Another Recipient
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {/* Upgraded Buttons with Hover Lifts & Shadows */}
+              {/* Action Buttons */}
               <div className="flex gap-4">
                 <button 
                   onClick={() => handleSend('ETH')}
@@ -213,7 +244,7 @@ export default function App() {
                 <div className="space-y-4 text-sm font-medium">
                   <div className="flex justify-between items-center pb-3 border-b border-white/10">
                     <span className="text-white/70">Chain</span>
-                    <span className="bg-white/10 px-3 py-1 rounded-lg font-mono">Base Mainnet</span>
+                    <span className="bg-white/10 px-3 py-1 rounded-lg font-mono">{chain?.name || 'Base Mainnet'}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-white/70">Status</span>
@@ -228,15 +259,15 @@ export default function App() {
               <div className="bg-white/70 backdrop-blur-xl p-7 rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <h3 className="font-bold text-slate-800 mb-5">Transfer Guide</h3>
                 <ul className="space-y-4 text-sm text-slate-500 leading-relaxed font-medium">
-                  <li className="flex gap-3"><ArrowRight size={16} className="text-blue-500 shrink-0 mt-0.5" /> Ensure identical line breaks or commas for addresses and amounts.</li>
+                  <li className="flex gap-3"><ArrowRight size={16} className="text-blue-500 shrink-0 mt-0.5" /> Add rows dynamically to prevent mismatched amounts.</li>
                   <li className="flex gap-3"><ArrowRight size={16} className="text-blue-500 shrink-0 mt-0.5" /> Keep enough ETH in your wallet to cover gas.</li>
-                  <li className="flex gap-3"><ArrowRight size={16} className="text-blue-500 shrink-0 mt-0.5" /> Tokens require a prompt to Appove spending first.</li>
+                  <li className="flex gap-3"><ArrowRight size={16} className="text-blue-500 shrink-0 mt-0.5" /> Tokens require a prompt to Approve spending first.</li>
                 </ul>
               </div>
             </aside>
           </div>
         ) : (
-          /* History Table Section - Upgraded to match */
+          /* History Table Section */
           <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -250,7 +281,9 @@ export default function App() {
               <tbody className="divide-y divide-slate-100/80">
                 {history.map((tx) => (
                   <tr key={tx.hash} className="hover:bg-slate-50/50 transition-colors duration-200">
-                    <td className="px-8 py-5 font-mono text-sm text-blue-600 hover:text-blue-800 cursor-pointer truncate max-w-[200px] transition-colors">{tx.hash}</td>
+                    <td className="px-8 py-5 font-mono text-sm text-blue-600 hover:text-blue-800 cursor-pointer truncate max-w-[200px] transition-colors">
+                      <a href={`https://basescan.org/tx/${tx.hash}`} target="_blank" rel="noreferrer">{tx.hash}</a>
+                    </td>
                     <td className="px-8 py-5">
                       <span className={`text-xs font-bold px-3 py-1 rounded-lg ${tx.type === 'ETH' ? 'bg-slate-100 text-slate-600' : 'bg-indigo-50 text-indigo-600'}`}>
                         {tx.type}
