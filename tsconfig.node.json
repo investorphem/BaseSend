@@ -3,8 +3,15 @@
     "composite": true,
     "skipLibCheck": true,
     "module": "ESNext",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    
+    // 📦 Upgraded from "node" to "bundler" to match your main tsconfig
+    // This ensures Vite plugins are resolved correctly without type errors.
+    "moduleResolution": "bundler",
+    
+    "allowSyntheticDefaultImports": true,
+    
+    // 🛡️ Added strict mode here as well for bulletproof config typing
+    "strict": true
   },
   "include": ["vite.config.ts"]
 }
