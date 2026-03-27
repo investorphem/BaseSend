@@ -1,20 +1,33 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    // 🚀 Upgraded target and lib to ES2022 for modern JS features (like top-level await)
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    
     "module": "ESNext",
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    
+    // 📦 Changed from "node" to "bundler". Vite strongly recommends this for modern apps.
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    
+    // 🛡️ Strict type-checking rules
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    // ✨ ADDED: Path Aliases! This lets you import like '@/components/Button' 
+    // instead of '../../components/Button'
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
