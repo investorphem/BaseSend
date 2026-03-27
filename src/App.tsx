@@ -5,6 +5,7 @@ import { parseEther, parseUnits, parseAbi, isAddress } from 'viem';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Send, History, Coins, Loader2, CheckCircle2, ShieldCheck, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
+import Logo from './components/Logo'; // 👈 Imported your custom logo!
 
 const CONTRACT_ADDRESS = '0x883f9868C5D44B16949ffF77fe56c4d9A9C2cfbD';
 const ABI = parseAbi([
@@ -75,15 +76,15 @@ export default function App() {
         });
       } else {
         if (!isAddress(tokenAddr)) throw new Error("Invalid Token Contract Address");
-        
+
         toast.loading("Please confirm token approval...", { id: toastId });
         const approveHash = await writeContractAsync({
           address: tokenAddr as `0x${string}`, abi: ABI, functionName: 'approve', args: [CONTRACT_ADDRESS, total]
         });
-        
+
         toast.loading("Waiting for approval confirmation...", { id: toastId });
         await waitForTransactionReceipt(config, { hash: approveHash });
-        
+
         toast.loading("Please confirm the batch transfer...", { id: toastId });
         txHash = await writeContractAsync({ 
           address: CONTRACT_ADDRESS, abi: ABI, functionName: 'multisendToken', args: [tokenAddr as `0x${string}`, safeAddrs, units] 
@@ -100,7 +101,7 @@ export default function App() {
       localStorage.setItem(`tx_history_${address}`, JSON.stringify(updatedHistory));
 
       toast.success("Batch transfer completed successfully!", { id: toastId });
-      
+
       // Clear forms on success
       setRows([{ address: '', amount: '' }]);
       setTokenAddr('');
@@ -116,13 +117,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-slate-50 to-purple-50 flex font-sans text-slate-800">
       <Toaster position="top-center" richColors />
-      
+
       {/* Sidebar */}
       <aside className="w-64 bg-white/60 backdrop-blur-xl border-r border-white/50 p-6 hidden md:flex flex-col shadow-[1px_0_20px_rgb(0,0,0,0.02)] z-10">
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-            <Coins size={20} />
-          </div>
+          {/* 👈 Custom SVG Logo Integration */}
+          <Logo className="w-10 h-10 shadow-lg shadow-blue-500/30 rounded-2xl" />
           <span className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500">BaseSend</span>
         </div>
 
@@ -170,14 +170,14 @@ export default function App() {
                       value={tokenAddr} onChange={e => setTokenAddr(e.target.value)} 
                     />
                   </div>
-                  
+
                   {/* Dynamic Rows Section */}
                   <div>
                     <div className="flex justify-between items-end mb-2.5 ml-1">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Recipients & Amounts</label>
                       <span className="text-xs font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">{rows.length} Total</span>
                     </div>
-                    
+
                     <div className="space-y-3">
                       {rows.map((row, index) => (
                         <div key={index} className="flex items-center gap-3">
@@ -255,7 +255,7 @@ export default function App() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white/70 backdrop-blur-xl p-7 rounded-[2rem] border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <h3 className="font-bold text-slate-800 mb-5">Transfer Guide</h3>
                 <ul className="space-y-4 text-sm text-slate-500 leading-relaxed font-medium">
